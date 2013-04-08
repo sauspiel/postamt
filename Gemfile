@@ -5,6 +5,8 @@ gem 'rails', git: 'https://github.com/rails/rails.git'
 
 gem 'pg'
 
+gem 'pry-rails'
+
 # Use unicorn as the app server
 # gem 'unicorn'
 
