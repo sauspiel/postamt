@@ -1,0 +1,14 @@
+development:
+  adapter: postgresql
+  database: sauspiel_staging
+  username: postgres
+  host: 127.0.0.1
+  port: 5434
+  encoding: utf8
+  slave1:
+    adapter: postgresql
+    database: sauspiel_staging
+    username: sauspiel_ro
+    host: 127.0.0.1
+    port: 5434
+    encoding: utf8
