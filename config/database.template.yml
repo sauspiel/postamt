@@ -1,0 +1,13 @@
+development:
+  adapter: postgresql
+  database: pgcharmer
+  username: postgres
+  password:
+  encoding: utf8
+
+slave:
+  adapter: postgresql
+  database: pgcharmer
+  username: postgres
+  password:
+  encoding: utf8
