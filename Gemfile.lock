@@ -39,6 +39,11 @@ GIT
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
 
+PATH
+  remote: vendor/pg_charmer
+  specs:
+    pg_charmer (0.0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -94,5 +99,6 @@ PLATFORMS
 
 DEPENDENCIES
   pg
+  pg_charmer!
   pry-rails
   rails!
