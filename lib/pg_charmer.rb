@@ -6,6 +6,9 @@ module PgCharmer
   # ActiveRecord is used standalone without Rails.
   def self.hook_active_record!
     ActiveRecord::Base.default_connection_handler = PgCharmer::ConnectionHandler.new
+    Kernel.const_set(:DCH, ARB.default_connection_handler)
   end
 end
 
+AR = ActiveRecord
+ARB = AR::Base

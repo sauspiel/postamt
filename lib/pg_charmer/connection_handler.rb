@@ -1,3 +1,5 @@
+require 'atomic'
+
 module PgCharmer
   class ConnectionHandler
     def initialize
@@ -17,7 +19,7 @@ module PgCharmer
     end
 
     def establish_connection(owner, spec)
-      puts "#{owner}: #{spec}"
+      puts "establish_connection #{owner}: #{spec.config[:username]}"
       @class_to_pool.clear
       raise RuntimeError, "Anonymous class is not allowed." unless owner.name
       owner_to_pool[owner.name] = ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec)
@@ -52,7 +54,7 @@ module PgCharmer
     def retrieve_connection(klass) #:nodoc:
       puts "retrieve_connection for #{klass}"
       pool = retrieve_connection_pool(klass)
-      (pool && pool.connection) or raise ConnectionNotEstablished
+      (pool && pool.connection) or raise ActiveRecord::ConnectionNotEstablished
     end
 
     # Returns true if a connection that's accessible to this class has
@@ -97,6 +99,7 @@ module PgCharmer
 
     private
 
+    # Scope the caches to the current pid so that they are autodropped after fork
     def owner_to_pool
       @owner_to_pool[Process.pid]
     end
@@ -106,6 +109,7 @@ module PgCharmer
     end
 
     def pool_for(owner)
+      puts "pool_for #{owner}"
       owner_to_pool.fetch(owner.name) {
         if ancestor_pool = pool_from_any_process_for(owner)
           # A connection was established in an ancestor process that must have
