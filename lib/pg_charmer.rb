@@ -12,15 +12,15 @@ module PgCharmer
   end
 end
 
-ActiveRecord::Base.default_connection_handler = PgCharmer::ConnectionHandler.new
-
 ActiveRecord::Base.instance_eval do
   class_attribute :default_connection
   self.default_connection = Rails.env
 
-  # disable establish_connection
+  self.default_connection_handler = PgCharmer::ConnectionHandler.new
+
+  # disable Model.establish_connection
   def establish_connection(*args)
-    puts "Stubbed out establish_connection"
+    # This would be the only place Model.connection_handler.establish_connection is called.
     nil
   end
 end

@@ -6,11 +6,6 @@ module PgCharmer
       @process_pid = Atomic.new(nil)
     end
 
-    # Connection establishment is managed by us
-    def establish_connection(owner, spec)
-      raise "Don't just switch out the default_connection_handler, use PgCharmer.install!"
-    end
-
     # This differs from the current public API.
     # https://github.com/rails/rails/commit/c3ca7ac09e960fa1287adc730e8ddc713e844c37
     def connection_pools
@@ -80,7 +75,7 @@ module PgCharmer
     protected
 
     def prepare
-      @process_pid = Atomic.new(Process.pid)
+      @process_pid.set(Process.pid)
       @pools = ThreadSafe::Cache.new(initial_capacity: 2)
     end
 
