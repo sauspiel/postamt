@@ -3,6 +3,18 @@ require 'atomic'
 module PgCharmer
   class ConnectionHandler
     def initialize
+      @process_pid = Atomic.new(nil)
+    end
+
+    def prepare
+      @process_pid = Atomic.new(Process.pid)
+      resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new Rails.env, ActiveRecord::Base.configurations
+      spec = resolver.spec
+
+      unless ActiveRecord::Base.respond_to?(spec.adapter_method)
+        raise ActiveRecord::AdapterNotFound, "database configuration specifies nonexistent #{spec.config[:adapter]} adapter"
+      end
+
       # These caches are keyed by klass.name, NOT klass. Keying them by klass
       # alone would lead to memory leaks in development mode as all previous
       # instances of the class would stay in memory.
@@ -12,6 +24,8 @@ module PgCharmer
       @class_to_pool = ThreadSafe::Cache.new(:initial_capacity => 2) do |h,k|
         h[k] = ThreadSafe::Cache.new
       end
+
+      self.establish_connection ActiveRecord::Base, spec
     end
 
     def connection_pools
@@ -19,7 +33,7 @@ module PgCharmer
     end
 
     def establish_connection(owner, spec)
-      puts "establish_connection #{owner}: #{spec.config[:username]}"
+      puts "establish_connection for #{owner} with #{spec.config[:username]}"
       @class_to_pool.clear
       raise RuntimeError, "Anonymous class is not allowed." unless owner.name
       owner_to_pool[owner.name] = ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec)
@@ -60,6 +74,7 @@ module PgCharmer
     # Returns true if a connection that's accessible to this class has
     # already been opened.
     def connected?(klass)
+      return false if @process_pid.get != Process.pid
       conn = retrieve_connection_pool(klass)
       conn && conn.connected?
     end
@@ -87,7 +102,8 @@ module PgCharmer
     # take place, but that's ok since the nil case is not the common one that we wish
     # to optimise for.
     def retrieve_connection_pool(klass)
-      class_to_pool[klass.name] ||= begin
+      puts "retrieve connection pool for #{klass}"
+      pool ||= begin
         until pool = pool_for(klass)
           klass = klass.superclass
           break unless klass <= ActiveRecord::Base
@@ -95,16 +111,24 @@ module PgCharmer
 
         class_to_pool[klass.name] = pool
       end
+      puts pool.spec.config[:username]
+      class_to_pool[klass.name] = pool
     end
 
     private
 
+    def ensure_ready
+      prepare if @process_pid.get != Process.pid
+    end
+
     # Scope the caches to the current pid so that they are autodropped after fork
     def owner_to_pool
+      ensure_ready
       @owner_to_pool[Process.pid]
     end
 
     def class_to_pool
+      ensure_ready
       @class_to_pool[Process.pid]
     end
 
