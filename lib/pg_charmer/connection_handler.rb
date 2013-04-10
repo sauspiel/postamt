@@ -58,24 +58,19 @@ module PgCharmer
     # Returns true if a connection that's accessible to this class has
     # already been opened.
     def connected?(klass)
-      return false if @process_pid.get != Process.pid
+      return false if Process.pid != @process_pid.get
       conn = self.retrieve_connection_pool(klass)
       conn && conn.connected?
     end
 
-    # Remove the connection for this class. This will close the active
-    # connection and the defined connection (if they exist). The result
-    # can be used as an argument for establish_connection, for easily
-    # re-establishing the connection.
+    # Only called in ActiveRecord test code, so performance isn't an issue.
     def remove_connection(owner)
-      self.ensure_ready
-      if pool = self.pool_for(owner)
-        pool.automatic_reconnect = false
-        pool.disconnect!
-        pool.spec.config
-      end
+      self.clear_cache
+      # Don't return a ConnectionSpecification hash since we've disabled establish_connection anyway
+      return nil
     end
 
+    # Called by ActiveRecord::ConnectionHandling#connection_pool.
     def retrieve_connection_pool(klass)
       self.ensure_ready
       puts "retrieve connection pool for #{klass}"
@@ -90,17 +85,28 @@ module PgCharmer
     end
 
     def ensure_ready
-      if @process_pid.get != Process.pid
+      if Process.pid != @process_pid.get
         # We've been forked -> throw away connection pools
         prepare
       end
     end
 
+    # Throw away all pools on next request
+    def clear_cache
+      @process_pid.set(nil)
+    end
+
     def pool_for(klass)
-      puts "pool_for #{klass}"
-      @pools.fetch(klass.default_connection) do
+      puts "pool_for #{klass}: #{klass.default_connection}"
+      # Ideally we would use #fetch here, as class_to_pool[klass] may sometimes be nil.
+      # However, benchmarking (https://gist.github.com/jonleighton/3552829) showed that
+      # #fetch is significantly slower than #[]. So in the nil case, no caching will
+      # take place, but that's ok since the nil case is not the common one that we wish
+      # to optimise for.
+      @pools[klass.default_connection] ||= begin
         puts "creating pool #{klass.default_connection}"
         # TODO: Don't depend on AR::Base.configurations?
+        # resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new configuration_hash, nil
         resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new klass.default_connection, ActiveRecord::Base.configurations
         spec = resolver.spec
 
