@@ -12,7 +12,7 @@ module PgCharmer
       end
     end
 
-    def connection_pool_list
+    def connection_pools
       owner_to_pool.values.compact
     end
 
@@ -26,23 +26,23 @@ module PgCharmer
     # Returns true if there are any active connections among the connection
     # pools that the ConnectionHandler is managing.
     def active_connections?
-      connection_pool_list.any?(&:active_connection?)
+      connection_pools.any?(&:active_connection?)
     end
 
     # Returns any connections in use by the current thread back to the pool,
     # and also returns connections to the pool cached by threads that are no
     # longer alive.
     def clear_active_connections!
-      connection_pool_list.each(&:release_connection)
+      connection_pools.each(&:release_connection)
     end
 
     # Clears the cache which maps classes.
     def clear_reloadable_connections!
-      connection_pool_list.each(&:clear_reloadable_connections!)
+      connection_pools.each(&:clear_reloadable_connections!)
     end
 
     def clear_all_connections!
-      connection_pool_list.each(&:disconnect!)
+      connection_pools.each(&:disconnect!)
     end
 
     # Locate the connection of the nearest super class. This can be an
