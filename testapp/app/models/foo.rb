@@ -3,5 +3,5 @@ class Foo < ActiveRecord::Base
 
   belongs_to :bar
 
-  establish_connection "#{Rails.env}_slave1"
+  self.default_connection = "#{Rails.env}_slave1"
 end

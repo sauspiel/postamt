@@ -6,59 +6,42 @@ module PgCharmer
       @process_pid = Atomic.new(nil)
     end
 
-    def prepare
-      @process_pid = Atomic.new(Process.pid)
-      resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new Rails.env, ActiveRecord::Base.configurations
-      spec = resolver.spec
-
-      unless ActiveRecord::Base.respond_to?(spec.adapter_method)
-        raise ActiveRecord::AdapterNotFound, "database configuration specifies nonexistent #{spec.config[:adapter]} adapter"
-      end
-
-      # These caches are keyed by klass.name, NOT klass. Keying them by klass
-      # alone would lead to memory leaks in development mode as all previous
-      # instances of the class would stay in memory.
-      @owner_to_pool = ThreadSafe::Cache.new(:initial_capacity => 2) do |h,k|
-        h[k] = ThreadSafe::Cache.new(:initial_capacity => 2)
-      end
-      @class_to_pool = ThreadSafe::Cache.new(:initial_capacity => 2) do |h,k|
-        h[k] = ThreadSafe::Cache.new
-      end
-
-      self.establish_connection ActiveRecord::Base, spec
-    end
-
-    def connection_pools
-      owner_to_pool.values.compact
-    end
-
+    # Connection establishment is managed by us
     def establish_connection(owner, spec)
-      puts "establish_connection for #{owner} with #{spec.config[:username]}"
-      @class_to_pool.clear
-      raise RuntimeError, "Anonymous class is not allowed." unless owner.name
-      owner_to_pool[owner.name] = ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec)
+      raise "Don't just switch out the default_connection_handler, use PgCharmer.install!"
+    end
+
+    # This differs from the current public API.
+    # https://github.com/rails/rails/commit/c3ca7ac09e960fa1287adc730e8ddc713e844c37
+    def connection_pools
+      self.ensure_ready
+      @pools.values
     end
 
     # Returns true if there are any active connections among the connection
     # pools that the ConnectionHandler is managing.
     def active_connections?
-      connection_pools.any?(&:active_connection?)
+      self.ensure_ready
+      self.connection_pools.any?(&:active_connection?)
     end
 
     # Returns any connections in use by the current thread back to the pool,
     # and also returns connections to the pool cached by threads that are no
     # longer alive.
     def clear_active_connections!
-      connection_pools.each(&:release_connection)
+      self.ensure_ready
+      self.connection_pools.each(&:release_connection)
     end
 
     # Clears the cache which maps classes.
     def clear_reloadable_connections!
-      connection_pools.each(&:clear_reloadable_connections!)
+      self.ensure_ready
+      self.connection_pools.each(&:clear_reloadable_connections!)
     end
 
     def clear_all_connections!
-      connection_pools.each(&:disconnect!)
+      self.ensure_ready
+      self.connection_pools.each(&:disconnect!)
     end
 
     # Locate the connection of the nearest super class. This can be an
@@ -66,8 +49,9 @@ module PgCharmer
     # opened and set as the active connection for the class it was defined
     # for (not necessarily the current class).
     def retrieve_connection(klass) #:nodoc:
+      self.ensure_ready
       puts "retrieve_connection for #{klass}"
-      pool = retrieve_connection_pool(klass)
+      pool = self.retrieve_connection_pool(klass)
       (pool && pool.connection) or raise ActiveRecord::ConnectionNotEstablished
     end
 
@@ -75,7 +59,7 @@ module PgCharmer
     # already been opened.
     def connected?(klass)
       return false if @process_pid.get != Process.pid
-      conn = retrieve_connection_pool(klass)
+      conn = self.retrieve_connection_pool(klass)
       conn && conn.connected?
     end
 
@@ -84,71 +68,48 @@ module PgCharmer
     # can be used as an argument for establish_connection, for easily
     # re-establishing the connection.
     def remove_connection(owner)
-      if pool = owner_to_pool.delete(owner.name)
-        @class_to_pool.clear
+      self.ensure_ready
+      if pool = self.pool_for(owner)
         pool.automatic_reconnect = false
         pool.disconnect!
         pool.spec.config
       end
     end
 
-    # Retrieving the connection pool happens a lot so we cache it in @class_to_pool.
-    # This makes retrieving the connection pool O(1) once the process is warm.
-    # When a connection is established or removed, we invalidate the cache.
-    #
-    # Ideally we would use #fetch here, as class_to_pool[klass] may sometimes be nil.
-    # However, benchmarking (https://gist.github.com/jonleighton/3552829) showed that
-    # #fetch is significantly slower than #[]. So in the nil case, no caching will
-    # take place, but that's ok since the nil case is not the common one that we wish
-    # to optimise for.
     def retrieve_connection_pool(klass)
+      self.ensure_ready
       puts "retrieve connection pool for #{klass}"
-      pool ||= begin
-        until pool = pool_for(klass)
-          klass = klass.superclass
-          break unless klass <= ActiveRecord::Base
-        end
-
-        class_to_pool[klass.name] = pool
-      end
-      puts pool.spec.config[:username]
-      class_to_pool[klass.name] = pool
+      self.pool_for(klass)
     end
 
-    private
+    protected
+
+    def prepare
+      @process_pid = Atomic.new(Process.pid)
+      @pools = ThreadSafe::Cache.new(initial_capacity: 2)
+    end
 
     def ensure_ready
-      prepare if @process_pid.get != Process.pid
+      if @process_pid.get != Process.pid
+        # We've been forked -> throw away connection pools
+        prepare
+      end
     end
 
-    # Scope the caches to the current pid so that they are autodropped after fork
-    def owner_to_pool
-      ensure_ready
-      @owner_to_pool[Process.pid]
-    end
+    def pool_for(klass)
+      puts "pool_for #{klass}"
+      @pools.fetch(klass.default_connection) do
+        puts "creating pool #{klass.default_connection}"
+        # TODO: Don't depend on AR::Base.configurations?
+        resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new klass.default_connection, ActiveRecord::Base.configurations
+        spec = resolver.spec
 
-    def class_to_pool
-      ensure_ready
-      @class_to_pool[Process.pid]
-    end
-
-    def pool_for(owner)
-      puts "pool_for #{owner}"
-      owner_to_pool.fetch(owner.name) {
-        if ancestor_pool = pool_from_any_process_for(owner)
-          # A connection was established in an ancestor process that must have
-          # subsequently forked. We can't reuse the connection, but we can copy
-          # the specification and establish a new connection with it.
-          establish_connection owner, ancestor_pool.spec
-        else
-          owner_to_pool[owner.name] = nil
+        unless ActiveRecord::Base.respond_to?(spec.adapter_method)
+          raise ActiveRecord::AdapterNotFound, "database configuration specifies nonexistent #{spec.config[:adapter]} adapter"
         end
-      }
-    end
 
-    def pool_from_any_process_for(owner)
-      owner_to_pool = @owner_to_pool.values.find { |v| v[owner.name] }
-      owner_to_pool && owner_to_pool[owner.name]
+        ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec)
+      end
     end
   end
 end
