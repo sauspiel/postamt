@@ -16,15 +16,8 @@ module PgCharmer
       owner_to_pool.values.compact
     end
 
-    def connection_pools
-      ActiveSupport::Deprecation.warn(
-        "In the next release, this will return the same as #connection_pool_list. " \
-        "(An array of pools, rather than a hash mapping specs to pools.)"
-      )
-      Hash[connection_pool_list.map { |pool| [pool.spec, pool] }]
-    end
-
     def establish_connection(owner, spec)
+      puts "#{owner}: #{spec}"
       @class_to_pool.clear
       raise RuntimeError, "Anonymous class is not allowed." unless owner.name
       owner_to_pool[owner.name] = ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec)
@@ -57,6 +50,7 @@ module PgCharmer
     # opened and set as the active connection for the class it was defined
     # for (not necessarily the current class).
     def retrieve_connection(klass) #:nodoc:
+      puts "retrieve_connection for #{klass}"
       pool = retrieve_connection_pool(klass)
       (pool && pool.connection) or raise ConnectionNotEstablished
     end
