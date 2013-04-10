@@ -45,7 +45,6 @@ module PgCharmer
     # for (not necessarily the current class).
     def retrieve_connection(klass) #:nodoc:
       self.ensure_ready
-      puts "retrieve_connection for #{klass}"
       pool = self.retrieve_connection_pool(klass)
       (pool && pool.connection) or raise ActiveRecord::ConnectionNotEstablished
     end
@@ -68,7 +67,6 @@ module PgCharmer
     # Called by ActiveRecord::ConnectionHandling#connection_pool.
     def retrieve_connection_pool(klass)
       self.ensure_ready
-      puts "retrieve connection pool for #{klass}"
       self.pool_for(klass)
     end
 
@@ -91,18 +89,19 @@ module PgCharmer
       @process_pid.set(nil)
     end
 
+    def connection_for(klass)
+      PgCharmer.force_connection || klass.default_connection || PgCharmer.default_connection
+    end
+
     def pool_for(klass)
-      puts "pool_for #{klass}: #{klass.default_connection}"
+      connection = connection_for(klass)
       # Ideally we would use #fetch here, as class_to_pool[klass] may sometimes be nil.
       # However, benchmarking (https://gist.github.com/jonleighton/3552829) showed that
       # #fetch is significantly slower than #[]. So in the nil case, no caching will
       # take place, but that's ok since the nil case is not the common one that we wish
       # to optimise for.
-      @pools[klass.default_connection] ||= begin
-        puts "creating pool #{klass.default_connection}"
-        # TODO: Don't depend on AR::Base.configurations?
-        # resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new configuration_hash, nil
-        resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new klass.default_connection, ActiveRecord::Base.configurations
+      @pools[connection] ||= begin
+        resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new connection, ActiveRecord::Base.configurations[Rails.env]
         spec = resolver.spec
 
         unless ActiveRecord::Base.respond_to?(spec.adapter_method)
