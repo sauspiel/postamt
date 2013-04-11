@@ -40,7 +40,3 @@ ActiveRecord::Base.instance_eval do
     end
   end
 end
-
-AR = ActiveRecord
-ARB = AR::Base
-DCH = ARB.default_connection_handler
