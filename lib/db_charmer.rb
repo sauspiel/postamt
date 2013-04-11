@@ -19,3 +19,11 @@ ActiveRecord::Base.instance_eval do
     puts "ignoring db_magic"
   end
 end
+
+ActionController::Base.instance_eval do
+  def force_slave_reads(*args)
+    around_filter(*args) do |controller, &block|
+      PgCharmer.on(:slave) { block.call }
+    end
+  end
+end
