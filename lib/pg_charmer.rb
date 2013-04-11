@@ -1,4 +1,4 @@
-require 'pry'
+require 'action_controller'
 require 'active_record'
 require 'pg_charmer/connection_handler'
 
