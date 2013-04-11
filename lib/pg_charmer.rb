@@ -26,10 +26,18 @@ module PgCharmer
   end
 end
 
+if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
+  PgCharmer::ConnectionSpecificationResolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver
+  ActiveRecord::Base.default_connection_handler = PgCharmer::ConnectionHandler.new
+elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
+  PgCharmer::ConnectionSpecificationResolver = ActiveRecord::Base::ConnectionSpecification::Resolver
+  ActiveRecord::Base.connection_handler = PgCharmer::ConnectionHandler.new
+else
+  abort "PgCharmer doesn't support Rails version #{Rails.version}"
+end
+
 ActiveRecord::Base.instance_eval do
   class_attribute :default_connection
-
-  self.default_connection_handler = PgCharmer::ConnectionHandler.new
 
   # disable Model.establish_connection
   def establish_connection(*args)

@@ -1,4 +1,5 @@
 require 'atomic'
+require 'thread_safe'
 
 module PgCharmer
   class ConnectionHandler
@@ -101,7 +102,7 @@ module PgCharmer
       # take place, but that's ok since the nil case is not the common one that we wish
       # to optimise for.
       @pools[connection] ||= begin
-        resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new connection, ActiveRecord::Base.configurations[Rails.env]
+        resolver = PgCharmer::ConnectionSpecificationResolver.new connection, ActiveRecord::Base.configurations[Rails.env]
         spec = resolver.spec
 
         unless ActiveRecord::Base.respond_to?(spec.adapter_method)
