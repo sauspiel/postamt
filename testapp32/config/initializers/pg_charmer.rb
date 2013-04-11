@@ -1,0 +1,1 @@
+../../../testapp/config/initializers/pg_charmer.rb
