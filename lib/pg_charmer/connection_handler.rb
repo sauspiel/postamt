@@ -95,6 +95,10 @@ module PgCharmer
     end
 
     def pool_for(klass)
+      # Sauspiel's reportable dependency makes Rails 3.2 request a connection early,
+      # before the App is initialized. Return nil in that case, Rails deals with that
+      return nil if ActiveRecord::Base.configurations[Rails.env].nil?
+
       connection = connection_for(klass)
       # Ideally we would use #fetch here, as class_to_pool[klass] may sometimes be nil.
       # However, benchmarking (https://gist.github.com/jonleighton/3552829) showed that
