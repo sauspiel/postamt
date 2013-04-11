@@ -4,7 +4,13 @@ require 'pg_charmer/connection_handler'
 
 module PgCharmer
   mattr_accessor :default_connection
+  mattr_accessor :transaction_connection
   mattr_accessor :force_connection
+
+  # Setup defaults
+  self.default_connection = :master
+  self.transaction_connection = :master
+  self.force_connection = :master if Rails.env.development?
 
   def self.on(connection)
     self.connection_stack << connection
@@ -31,12 +37,13 @@ ActiveRecord::Base.instance_eval do
     nil
   end
 
+  # a transaction runs on PgCharmer.connection_for_transactions or on
+  # the :on option
   def transaction(options = {}, &block)
-    PgCharmer.connection_stack << :master
-    begin
+    if connection = (options.delete(:on) || PgCharmer.transaction_connection)
+      PgCharmer.on(connection) { super }
+    else
       super
-    ensure
-      PgCharmer.connection_stack.pop
     end
   end
 end
