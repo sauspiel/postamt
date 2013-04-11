@@ -68,7 +68,7 @@ ActionController::Base.instance_eval do
       default_connections[klass_name] = connection
     end
 
-    before_filter(args) do |controller, &block|
+    before_filter(args) do |controller|
       PgCharmer.overwritten_default_connections.merge!(default_connections)
     end
   end
