@@ -45,8 +45,7 @@ ActiveRecord::Base.instance_eval do
     nil
   end
 
-  # a transaction runs on PgCharmer.connection_for_transactions or on
-  # the :on option
+  # a transaction runs on PgCharmer.transaction_connection or on the :on option
   def transaction(options = {}, &block)
     if connection = (options.delete(:on) || PgCharmer.transaction_connection)
       PgCharmer.on(connection) { super }
