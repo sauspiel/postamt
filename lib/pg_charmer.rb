@@ -24,6 +24,11 @@ module PgCharmer
   def self.connection_stack
     Thread.current[:pg_charmer_connection_stack] ||= []
   end
+
+  # Used by use_db_connection. Cleared in an after_filter.
+  def self.overwritten_default_connections
+    Thread.current[:pg_charmer_overwritten_default_connections] ||= {}
+  end
 end
 
 if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
@@ -52,5 +57,20 @@ ActiveRecord::Base.instance_eval do
     else
       super
     end
+  end
+end
+
+ActionController::Base.instance_eval do
+  def use_db_connection(connection, args)
+    klasses = args.delete(:for).map { |klass| if klass.is_a? String then klass else klass.name end }
+    before_filter(args) do |controller, &block|
+      klasses.each do |klass|
+        PgCharmer.overwritten_default_connections[klass] = connection
+      end
+    end
+  end
+
+  after_filter do
+    PgCharmer.overwritten_default_connections.clear
   end
 end

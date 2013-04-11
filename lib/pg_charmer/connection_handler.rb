@@ -91,7 +91,7 @@ module PgCharmer
     end
 
     def connection_for(klass)
-      PgCharmer.force_connection || PgCharmer.connection_stack.last || klass.default_connection || PgCharmer.default_connection
+      PgCharmer.force_connection || PgCharmer.connection_stack.last || PgCharmer.overwritten_default_connections[klass.name] || klass.default_connection || PgCharmer.default_connection
     end
 
     def pool_for(klass)
