@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'pg_charmer/version'
+require 'postamt/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "pg_charmer"
-  spec.version       = PgCharmer::VERSION
+  spec.name          = "postamt"
+  spec.version       = Postamt::VERSION
   spec.authors       = ["Martin Schürrer"]
   spec.email         = ["martin@schuerrer.org"]
   spec.description   = %q{TODO: Write a gem description}

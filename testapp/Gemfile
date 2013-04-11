@@ -5,7 +5,7 @@ gem 'rails', git: 'https://github.com/rails/rails.git'
 gem 'pg'
 gem 'pry-rails'
 
-gem 'pg_charmer', path: '..'
+gem 'postamt', path: '..'
 
 # Use unicorn as the app server
 # gem 'unicorn'

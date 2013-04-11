@@ -1,8 +1,8 @@
 require 'action_controller'
 require 'active_record'
-require 'pg_charmer/connection_handler'
+require 'postamt/connection_handler'
 
-module PgCharmer
+module Postamt
   mattr_accessor :default_connection
   mattr_accessor :transaction_connection
   mattr_accessor :force_connection
@@ -22,23 +22,23 @@ module PgCharmer
   end
 
   def self.connection_stack
-    Thread.current[:pg_charmer_connection_stack] ||= []
+    Thread.current[:postamt_connection_stack] ||= []
   end
 
   # Used by use_db_connection. Cleared in an after_filter.
   def self.overwritten_default_connections
-    Thread.current[:pg_charmer_overwritten_default_connections] ||= {}
+    Thread.current[:postamt_overwritten_default_connections] ||= {}
   end
 end
 
 if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
-  PgCharmer::ConnectionSpecificationResolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver
-  ActiveRecord::Base.default_connection_handler = PgCharmer::ConnectionHandler.new
+  Postamt::ConnectionSpecificationResolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver
+  ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
 elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
-  PgCharmer::ConnectionSpecificationResolver = ActiveRecord::Base::ConnectionSpecification::Resolver
-  ActiveRecord::Base.connection_handler = PgCharmer::ConnectionHandler.new
+  Postamt::ConnectionSpecificationResolver = ActiveRecord::Base::ConnectionSpecification::Resolver
+  ActiveRecord::Base.connection_handler = Postamt::ConnectionHandler.new
 else
-  abort "PgCharmer doesn't support Rails version #{Rails.version}"
+  abort "Postamt doesn't support Rails version #{Rails.version}"
 end
 
 ActiveRecord::Base.instance_eval do
@@ -50,10 +50,10 @@ ActiveRecord::Base.instance_eval do
     nil
   end
 
-  # a transaction runs on PgCharmer.transaction_connection or on the :on option
+  # a transaction runs on Postamt.transaction_connection or on the :on option
   def transaction(options = {}, &block)
-    if connection = (options.delete(:on) || PgCharmer.transaction_connection)
-      PgCharmer.on(connection) { super }
+    if connection = (options.delete(:on) || Postamt.transaction_connection)
+      Postamt.on(connection) { super }
     else
       super
     end
@@ -69,11 +69,11 @@ ActionController::Base.instance_eval do
     end
 
     before_filter(args) do |controller|
-      PgCharmer.overwritten_default_connections.merge!(default_connections)
+      Postamt.overwritten_default_connections.merge!(default_connections)
     end
   end
 
   after_filter do
-    PgCharmer.overwritten_default_connections.clear
+    Postamt.overwritten_default_connections.clear
   end
 end

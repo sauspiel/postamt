@@ -1,7 +1,7 @@
 require 'atomic'
 require 'thread_safe'
 
-module PgCharmer
+module Postamt
   class ConnectionHandler
     def initialize
       @process_pid = Atomic.new(nil)
@@ -91,7 +91,7 @@ module PgCharmer
     end
 
     def connection_for(klass)
-      PgCharmer.force_connection || PgCharmer.connection_stack.last || PgCharmer.overwritten_default_connections[klass.name] || klass.default_connection || PgCharmer.default_connection
+      Postamt.force_connection || Postamt.connection_stack.last || Postamt.overwritten_default_connections[klass.name] || klass.default_connection || Postamt.default_connection
     end
 
     def pool_for(klass)
@@ -106,7 +106,7 @@ module PgCharmer
       # take place, but that's ok since the nil case is not the common one that we wish
       # to optimise for.
       @pools[connection] ||= begin
-        resolver = PgCharmer::ConnectionSpecificationResolver.new connection, ActiveRecord::Base.configurations[Rails.env]
+        resolver = Postamt::ConnectionSpecificationResolver.new connection, ActiveRecord::Base.configurations[Rails.env]
         spec = resolver.spec
 
         unless ActiveRecord::Base.respond_to?(spec.adapter_method)

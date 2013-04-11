@@ -1,4 +1,4 @@
-# PgCharmer
+# Postamt
 
 TODO: Write a gem description
 
