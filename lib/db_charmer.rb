@@ -1,8 +1,4 @@
 # Drop in replacement for db-charmer
-begin
-  require 'db-charmer'
-rescue LoadError
-end
 if defined? DbCharmer
   raise "Can't use db-charmer with pg_charmer"
 end
@@ -10,7 +6,7 @@ require 'pg_charmer'
 
 module DbCharmer
  def self.enable_controller_magic!
-   nil
+   puts "ignoring enable_controller_magic!"
  end
 end
 
@@ -22,8 +18,6 @@ end
 
 ActionController::Base.instance_eval do
   def force_slave_reads(*args)
-    around_filter(*args) do |controller, &block|
-      PgCharmer.on(:slave) { block.call }
-    end
+    puts "ignoring force_slave_reads"
   end
 end
