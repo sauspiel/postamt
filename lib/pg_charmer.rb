@@ -62,11 +62,14 @@ end
 
 ActionController::Base.instance_eval do
   def use_db_connection(connection, args)
-    klasses = args.delete(:for).map { |klass| if klass.is_a? String then klass else klass.name end }
+    default_connections = {}
+    klass_names = args.delete(:for)
+    klass_names.each do |klass_name|
+      default_connections[klass_name] = connection
+    end
+
     before_filter(args) do |controller, &block|
-      klasses.each do |klass|
-        PgCharmer.overwritten_default_connections[klass] = connection
-      end
+      PgCharmer.overwritten_default_connections.merge!(default_connections)
     end
   end
 
