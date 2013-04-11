@@ -10,7 +10,7 @@ module PgCharmer
   # Setup defaults
   self.default_connection = :master
   self.transaction_connection = :master
-  self.force_connection = :master if Rails.env.development?
+  self.force_connection = nil
 
   def self.on(connection)
     self.connection_stack << connection
