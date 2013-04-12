@@ -1,6 +1,7 @@
 require 'action_controller'
 require 'active_record'
 require 'postamt/connection_handler'
+require 'postamt/railtie'
 
 module Postamt
   mattr_accessor :default_connection
@@ -40,51 +41,59 @@ module Postamt
   def self.overwritten_default_connections
     Thread.current[:postamt_overwritten_default_connections] ||= {}
   end
-end
 
-if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
-  Postamt::ConnectionSpecificationResolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver
-  ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
-elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
-  Postamt::ConnectionSpecificationResolver = ActiveRecord::Base::ConnectionSpecification::Resolver
-  ActiveRecord::Base.connection_handler = Postamt::ConnectionHandler.new
-else
-  abort "Postamt doesn't support Rails version #{Rails.version}"
-end
-
-ActiveRecord::Base.instance_eval do
-  class_attribute :default_connection
-
-  # disable Model.establish_connection
-  def establish_connection(*args)
-    # This would be the only place Model.connection_handler.establish_connection is called.
-    nil
+  if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
+    Postamt::ConnectionSpecificationResolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver
+  elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
+    Postamt::ConnectionSpecificationResolver = ActiveRecord::Base::ConnectionSpecification::Resolver
+  else
+    abort "Postamt doesn't support Rails version #{Rails.version}"
   end
 
-  # a transaction runs on Postamt.transaction_connection or on the :on option
-  def transaction(options = {}, &block)
-    if connection = (options.delete(:on) || Postamt.transaction_connection)
-      Postamt.on(connection) { super }
-    else
-      super
+  # Called by Postamt::Railtie
+  def self.hook!
+    if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
+      ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
+    elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
+      ActiveRecord::Base.connection_handler = Postamt::ConnectionHandler.new
+    end
+
+    ActiveRecord::Base.instance_eval do
+      class_attribute :default_connection
+
+      # disable Model.establish_connection
+      def establish_connection(*args)
+        # This would be the only place Model.connection_handler.establish_connection is called.
+        nil
+      end
+
+      # a transaction runs on Postamt.transaction_connection or on the :on option
+      def transaction(options = {}, &block)
+        if connection = (options.delete(:on) || Postamt.transaction_connection)
+          Postamt.on(connection) { super }
+        else
+          super
+        end
+      end
+    end
+
+    ActionController::Base.instance_eval do
+      def use_db_connection(connection, args)
+        default_connections = {}
+        klass_names = args.delete(:for)
+        klass_names.each do |klass_name|
+          default_connections[klass_name] = connection
+        end
+
+        before_filter(args) do |controller|
+          Postamt.overwritten_default_connections.merge!(default_connections)
+        end
+      end
+
+      after_filter do
+        Postamt.overwritten_default_connections.clear
+      end
     end
   end
 end
 
-ActionController::Base.instance_eval do
-  def use_db_connection(connection, args)
-    default_connections = {}
-    klass_names = args.delete(:for)
-    klass_names.each do |klass_name|
-      default_connections[klass_name] = connection
-    end
-
-    before_filter(args) do |controller|
-      Postamt.overwritten_default_connections.merge!(default_connections)
-    end
-  end
-
-  after_filter do
-    Postamt.overwritten_default_connections.clear
-  end
-end
