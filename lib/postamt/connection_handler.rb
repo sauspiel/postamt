@@ -7,9 +7,12 @@ module Postamt
       @process_pid = Atomic.new(nil)
     end
 
-    # This differs from the current public API.
-    # https://github.com/rails/rails/commit/c3ca7ac09e960fa1287adc730e8ddc713e844c37
     def connection_pools
+      # See https://github.com/rails/rails/commit/c3ca7ac09e960fa1287adc730e8ddc713e844c37
+      Hash[self.connection_pool_list.map { |pool| [pool.spec, pool] }]
+    end
+
+    def connection_pool_list
       self.ensure_ready
       @pools.values
     end
@@ -18,7 +21,7 @@ module Postamt
     # pools that the ConnectionHandler is managing.
     def active_connections?
       self.ensure_ready
-      self.connection_pools.any?(&:active_connection?)
+      self.connection_pool_list.any?(&:active_connection?)
     end
 
     # Returns any connections in use by the current thread back to the pool,
@@ -26,18 +29,18 @@ module Postamt
     # longer alive.
     def clear_active_connections!
       self.ensure_ready
-      self.connection_pools.each(&:release_connection)
+      self.connection_pool_list.each(&:release_connection)
     end
 
     # Clears the cache which maps classes.
     def clear_reloadable_connections!
       self.ensure_ready
-      self.connection_pools.each(&:clear_reloadable_connections!)
+      self.connection_pool_list.each(&:clear_reloadable_connections!)
     end
 
     def clear_all_connections!
       self.ensure_ready
-      self.connection_pools.each(&:disconnect!)
+      self.connection_pool_list.each(&:disconnect!)
     end
 
     # Locate the connection of the nearest super class. This can be an
