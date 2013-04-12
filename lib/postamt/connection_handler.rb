@@ -106,6 +106,7 @@ module Postamt
       # take place, but that's ok since the nil case is not the common one that we wish
       # to optimise for.
       @pools[connection] ||= begin
+        Postamt.configurations[connection.to_s] ||= Postamt.configurations['master']
         resolver = Postamt::ConnectionSpecificationResolver.new connection, Postamt.configurations
         spec = resolver.spec
 
