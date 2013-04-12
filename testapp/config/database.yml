@@ -1,11 +1,7 @@
 development:
-  master:
-    adapter: postgresql
-    database: pgcharmer
-    username: master
-    encoding: utf8
+  adapter: postgresql
+  database: pgcharmer
+  username: master
+  encoding: utf8
   slave:
-    adapter: postgresql
-    database: pgcharmer
     username: slave
-    encoding: utf8

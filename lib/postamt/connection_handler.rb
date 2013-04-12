@@ -106,7 +106,7 @@ module Postamt
       # take place, but that's ok since the nil case is not the common one that we wish
       # to optimise for.
       @pools[connection] ||= begin
-        resolver = Postamt::ConnectionSpecificationResolver.new connection, ActiveRecord::Base.configurations[Rails.env]
+        resolver = Postamt::ConnectionSpecificationResolver.new connection, Postamt.configurations
         spec = resolver.spec
 
         unless ActiveRecord::Base.respond_to?(spec.adapter_method)

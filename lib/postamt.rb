@@ -21,6 +21,17 @@ module Postamt
     end
   end
 
+  def self.configurations
+    @configurations ||= begin
+      input = ActiveRecord::Base.configurations[Rails.env]
+      configs = input.select { |k, v| v.is_a? Hash }
+      master_config = input.reject { |k, v| v.is_a? Hash }
+      configs.each { |k, v| v.reverse_merge!(master_config) }
+      configs['master'] = master_config
+      configs
+    end
+  end
+
   def self.connection_stack
     Thread.current[:postamt_connection_stack] ||= []
   end
