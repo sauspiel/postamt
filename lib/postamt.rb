@@ -77,6 +77,24 @@ module Postamt
       end
     end
 
+    ActiveRecord::Relation.class_eval do
+      # Also make sure that actions that don't instantiate the model and
+      # therefore don't call #save or #destroy run on master.
+      # update_column calls update_all, delete calls delete_all, so we don't
+      # have to monkey patch them.
+
+      def delete_all_with_postamt(conditions = nil)
+        Postamt.on(:master) { delete_all_without_postamt(conditions) }
+      end
+
+      def update_all_with_postamt(updates, conditions = nil, options = {})
+        Postamt.on(:master) { update_all_without_postamt(updates, conditions, options) }
+      end
+
+      alias_method_chain :delete_all, :postamt
+      alias_method_chain :update_all, :postamt
+    end
+
     ActionController::Base.instance_eval do
       def use_db_connection(connection, args)
         default_connections = {}
