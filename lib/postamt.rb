@@ -91,6 +91,7 @@ module Postamt
         Postamt.on(:master) { update_all_without_postamt(updates, conditions, options) }
       end
 
+      # TODO: Switch to Module#prepend once we are Ruby-2.0.0-only
       alias_method_chain :delete_all, :postamt
       alias_method_chain :update_all, :postamt
     end
