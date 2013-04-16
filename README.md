@@ -2,16 +2,17 @@
 
 [![Gem Version](https://badge.fury.io/rb/postamt.png)](http://rubygems.org/gems/postamt)
 
-Postamt is a Rails-4-ready sane solution for performing (some) database
-reads against a hot standby server. It's been battle tested in
-production.
+Postamt is a Rails-4-ready, sane solution for performing database
+reads against a hot standby server.
 
 Choose per model and/or controller&action whether a read-only query
 should be sent to master or a hot standby.<br />
-Or just use `Postamt.on(:slave) { ... }`.
+Inside a transaction reads always happen against master.
 
 Care has been taken to avoid [common performance
 pitfalls](http://charlie.bz/blog/things-that-clear-rubys-method-cache).
+It's been battle tested in production at
+[sauspiel.de](https://www.sauspiel.de/).
 
 Monkey-patching is kept to an absolute minimum, the hard work happens
 through [officially-supported Rails
@@ -24,7 +25,7 @@ Postamt requires Rails 3.2+ and works with Rails 4.
 
 Add this line to your application's Gemfile:
 
-    gem 'pg_charmer'
+    gem 'postamt'
 
 ## Example usage
 
