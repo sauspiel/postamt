@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/postamt.png)](http://rubygems.org/gems/postamt)
 
-Postamt is a Rails-4-ready, sane solution for performing database
+Postamt is a sane, Rails-4-ready solution for performing database
 reads against a hot standby server.
 
 Choose per model and/or controller&action whether a read-only query
