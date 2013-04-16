@@ -8,6 +8,16 @@ Choose per model and/or controller&action whether a read-only query
 should be sent to master or a hot standby.<br />
 Or just use `Postamt.on(:slave) { ... }`.
 
+Care has been taken to avoid [common performance
+pitfalls](http://charlie.bz/blog/things-that-clear-rubys-method-cache).
+
+Monkey-patching is kept to an absolute minimum, the hard work happens
+through [officially-supported Rails
+APIs](https://github.com/rails/rails/commit/ba1544d71628abff2777c9c514142d7e9a159111#commitcomment-2106059).
+That's why there's so little code compared to similar gems.
+
+Postamt requires Rails 3.2+ and works with Rails 4.
+
 ## Installation
 
 Add this line to your application's Gemfile:
