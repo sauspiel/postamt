@@ -2,7 +2,9 @@
 
 [![Gem Version](https://badge.fury.io/rb/postamt.png)](http://rubygems.org/gems/postamt)
 
-Performs (some of) your read-only queries on a hot standby.
+Postamt is a Rails-4-ready sane solution for performing (some) database
+reads against a hot standby server. It's been battle tested in
+production.
 
 Choose per model and/or controller&action whether a read-only query
 should be sent to master or a hot standby.<br />
