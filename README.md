@@ -1,6 +1,12 @@
 # Postamt
 
+[![Gem Version](https://badge.fury.io/rb/postamt.png)](http://rubygems.org/gems/postamt)
+
 Performs (some of) your read-only queries on a hot standby.
+
+Choose per model and/or controller&action whether a read-only query
+should be sent to master or a hot standby.<br />
+Or just use `Postamt.on(:slave) { ... }`.
 
 ## Installation
 
