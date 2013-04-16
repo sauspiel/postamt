@@ -6,8 +6,8 @@ require 'postamt/version'
 Gem::Specification.new do |spec|
   spec.name          = "postamt"
   spec.version       = Postamt::VERSION
-  spec.authors       = ["Martin Schürrer"]
-  spec.email         = ["martin@schuerrer.org"]
+  spec.authors       = ["Martin Schürrer", "Martin Kavalar"]
+  spec.email         = ["martin@schuerrer.org", "martin@sauspiel.de"]
   spec.description   = %q{Choose per model and/or controller&action whether a read-only query should be sent to master or a hot standby. Or just use Postamt.on(:slave) { ... }. }
   spec.summary       = %q{Performs (some of) your read-only queries on a hot standby}
   spec.homepage      = "https://github.com/sauspiel/postamt"
