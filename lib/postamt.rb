@@ -96,6 +96,24 @@ module Postamt
       alias_method_chain :update_all, :postamt
     end
 
+    ActiveRecord::LogSubscriber.class_eval do
+      attr_accessor :connection_name
+
+      def sql_with_connection_name(event)
+        self.connection_name = ObjectSpace._id2ref(event.payload[:connection_id]).instance_variable_get(:@config)[:host]
+        sql_without_connection_name(event)
+      end
+
+      def debug_with_connection_name(msg)
+        conn = connection_name ? color("  [#{connection_name}]", ActiveSupport::LogSubscriber::BLUE, true) : ''
+        debug_without_connection_name(conn + msg)
+      end
+
+      # TODO: Switch to Module#prepend once we are Ruby-2.0.0-onlhy
+      alias_method_chain :sql, :connection_name
+      alias_method_chain :debug, :connection_name
+    end
+
     ActionController::Base.instance_eval do
       def use_db_connection(connection, args)
         default_connections = {}
