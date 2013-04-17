@@ -100,7 +100,7 @@ module Postamt
       attr_accessor :connection_name
 
       def sql_with_connection_name(event)
-        self.connection_name = ObjectSpace._id2ref(event.payload[:connection_id]).instance_variable_get(:@config)[:host]
+        self.connection_name = ObjectSpace._id2ref(event.payload[:connection_id]).instance_variable_get(:@config)[:username]
         sql_without_connection_name(event)
       end
 
