@@ -9,20 +9,17 @@
 # from scratch. The latter is a flawed and unsustainable approach (the more migrations
 # you'll amass, the slower it'll run and the greater likelihood for issues).
 #
-# It's strongly recommended that you check this file into your version control system.
+# It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130408112535) do
+ActiveRecord::Schema.define(:version => 20130408112535) do
 
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
-
-  create_table "bars", force: true do |t|
+  create_table "test_bars", :force => true do |t|
     t.text     "message"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  create_table "foos", force: true do |t|
+  create_table "test_foos", :force => true do |t|
     t.integer  "bar_id"
     t.datetime "created_at"
     t.datetime "updated_at"

@@ -100,6 +100,33 @@ end
 Postamt.force_connection = :master
 ```
 
+## Tests
+
+Create the DB `postamt_tests` and ensure the users `master` and
+`slave` exist:
+
+```
+$ createdb postamt_test
+$ createuser -s master
+$ createuser -s slave # better to restrict slave to be read-only
+```
+
+Migrate the DB in the Rails 4 app:
+
+```
+$ cd testapp # Rails 4
+$ RAILS_ENV=test bundle exec rake db:migrate
+```
+
+Run the tests on Rails 3.2 and Rails 4:
+
+```
+$ cd testapp # Rails 4
+$ be ruby -Itest test/integration/postamt_test.rb
+$ cd testapp32 # Rails 3.2
+$ be ruby -Itest test/integration/postamt_test.rb
+```
+
 ## Contributing
 
 1. Fork it
@@ -107,3 +134,4 @@ Postamt.force_connection = :master
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
