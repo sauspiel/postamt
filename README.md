@@ -102,7 +102,7 @@ Postamt.force_connection = :master
 
 ## Tests
 
-Create the DB `postamt_tests` and ensure the users `master` and
+Create the DB `postamt_test` and ensure the users `master` and
 `slave` exist:
 
 ```
