@@ -107,7 +107,7 @@ Create the DB `postamt_test` and ensure the users `master` and
 
 ```
 $ createdb postamt_test
-$ createuser -s master
+$ createuser -s master # -s => superuser
 $ createuser -s slave # better to restrict slave to be read-only
 ```
 
