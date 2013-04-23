@@ -122,9 +122,9 @@ Run the tests on Rails 3.2 and Rails 4:
 
 ```
 $ cd testapp # Rails 4
-$ be ruby -Itest test/integration/postamt_test.rb
+$ bundle exec ruby -Itest test/integration/postamt_test.rb
 $ cd testapp32 # Rails 3.2
-$ be ruby -Itest test/integration/postamt_test.rb
+$ bundle exec ruby -Itest test/integration/postamt_test.rb
 ```
 
 ## Contributing
