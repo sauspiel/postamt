@@ -127,6 +127,10 @@ $ cd testapp32 # Rails 3.2
 $ bundle exec ruby -Itest test/integration/postamt_test.rb
 ```
 
+You can't run the tests via a simple `rake` because Postamt deactivates
+itself when it detects that a task starting with 'db' is run (like
+`db:test:prepare`)
+
 ## Contributing
 
 1. Fork it
