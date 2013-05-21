@@ -2,9 +2,13 @@ module Postamt
   class Railtie < Rails::Railtie
     railtie_name "postamt"
 
+    attr_accessor :running_in_rake
+    rake_tasks do
+      self.running_in_rake = true
+    end
+
     initializer "postamt.hook", before: "active_record.initialize_database" do |app|
-      # $rails_rake_task was removed in Rails 4, so for Rails 4 we just check if Rake was loaded
-      if defined?(Rake) || (defined?($rails_rake_task) && $rails_rake_task)
+      if self.running_in_rake
         # We mustn't hook into AR when db:migrate or db:test:load_schema
         # run, but user-defined Rake tasks still need us
         task_names = []
