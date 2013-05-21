@@ -3,7 +3,8 @@ module Postamt
     railtie_name "postamt"
 
     initializer "postamt.hook", before: "active_record.initialize_database" do |app|
-      if (defined?($rails_rake_task) && $rails_rake_task)
+      # $rails_rake_task was removed in Rails 4, so for Rails 4 we just check if Rake was loaded
+      if defined?(Rake) || (defined?($rails_rake_task) && $rails_rake_task)
         # We mustn't hook into AR when db:migrate or db:test:load_schema
         # run, but user-defined Rake tasks still need us
         task_names = []
