@@ -116,14 +116,20 @@ module Postamt
 
     ActionController::Base.instance_eval do
       def use_db_connection(connection, args)
-        default_connections = {}
         klass_names = args.delete(:for)
-        klass_names.each do |klass_name|
-          default_connections[klass_name] = connection
-        end
+        if klass_names == :all
+          around_filter(args) do |controller|
+            Postamt.on(connection) { yield }
+          end
+        else
+          default_connections = {}
+          klass_names.each do |klass_name|
+            default_connections[klass_name] = connection
+          end
 
-        before_filter(args) do |controller|
-          Postamt.overwritten_default_connections.merge!(default_connections)
+          before_filter(args) do |controller|
+            Postamt.overwritten_default_connections.merge!(default_connections)
+          end
         end
       end
 
