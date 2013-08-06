@@ -18,7 +18,17 @@ module Postamt
           task_names << task.name
           tasks_to_examine += task.prerequisite_tasks
         end
-        next if task_names.any? { |task_name| task_name.start_with? "db:" }
+        if task_names.any? { |task_name| task_name.start_with? "db:" }
+          # Stub out Postamt's monkeypatches if we're running in a Rake task
+          ActionController::Base.instance_eval do
+            def use_db_connection(connection, args)
+            end
+          end
+          ActiveRecord::Base.instance_eval do
+            class_attribute :default_connection
+          end
+          next
+        end
       end
       Postamt.hook!
     end
