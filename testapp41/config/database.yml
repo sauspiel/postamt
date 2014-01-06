@@ -1,0 +1,15 @@
+development:
+  adapter: postgresql
+  database: postamt
+  username: master
+  encoding: utf8
+  slave:
+    username: slave
+
+test:
+  adapter: postgresql
+  database: postamt_test
+  username: master
+  encoding: utf8
+  slave:
+    username: slave
