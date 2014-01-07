@@ -87,8 +87,14 @@ module Postamt
         Postamt.on(:master) { delete_all_without_postamt(conditions) }
       end
 
-      def update_all_with_postamt(updates, conditions = nil, options = {})
-        Postamt.on(:master) { update_all_without_postamt(updates, conditions, options) }
+      if Rails::VERSION::MAJOR >= 4 and Rails::VERSION::MINOR >= 1
+        def update_all_with_postamt(updates)
+          Postamt.on(:master) { update_all_without_postamt(updates) }
+        end
+      else
+        def update_all_with_postamt(updates, conditions = nil, options = {})
+          Postamt.on(:master) { update_all_without_postamt(updates, conditions, options) }
+        end
       end
 
       # TODO: Switch to Module#prepend once we are Ruby-2.0.0-only
