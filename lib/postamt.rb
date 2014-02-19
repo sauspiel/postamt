@@ -42,14 +42,6 @@ module Postamt
     Thread.current[:postamt_overwritten_default_connections] ||= {}
   end
 
-  if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 1
-    Postamt::ConnectionSpecificationResolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver
-  elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
-    Postamt::ConnectionSpecificationResolver = ActiveRecord::Base::ConnectionSpecification::Resolver
-  else
-    abort "Postamt doesn't support Rails version #{Rails.version}"
-  end
-
   # Called by Postamt::Railtie
   def self.hook!
     if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 1
