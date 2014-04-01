@@ -69,49 +69,6 @@ module Postamt
       end
     end
 
-    ActiveRecord::Relation.class_eval do
-      # Also make sure that actions that don't instantiate the model and
-      # therefore don't call #save or #destroy run on master.
-      # update_column calls update_all, delete calls delete_all, so we don't
-      # have to monkey patch them.
-
-      def delete_all_with_postamt(conditions = nil)
-        Postamt.on(:master) { delete_all_without_postamt(conditions) }
-      end
-
-      if Rails::VERSION::MAJOR >= 4 and Rails::VERSION::MINOR >= 1
-        def update_all_with_postamt(updates)
-          Postamt.on(:master) { update_all_without_postamt(updates) }
-        end
-      else
-        def update_all_with_postamt(updates, conditions = nil, options = {})
-          Postamt.on(:master) { update_all_without_postamt(updates, conditions, options) }
-        end
-      end
-
-      # TODO: Switch to Module#prepend once we are Ruby-2.0.0-only
-      alias_method_chain :delete_all, :postamt
-      alias_method_chain :update_all, :postamt
-    end
-
-    ActiveRecord::LogSubscriber.class_eval do
-      attr_accessor :connection_name
-
-      def sql_with_connection_name(event)
-        self.connection_name = ObjectSpace._id2ref(event.payload[:connection_id]).instance_variable_get(:@config)[:username]
-        sql_without_connection_name(event)
-      end
-
-      def debug_with_connection_name(msg)
-        conn = connection_name ? color("  [#{connection_name}]", ActiveSupport::LogSubscriber::BLUE, true) : ''
-        debug_without_connection_name(conn + msg)
-      end
-
-      # TODO: Switch to Module#prepend once we are Ruby-2.0.0-onlhy
-      alias_method_chain :sql, :connection_name
-      alias_method_chain :debug, :connection_name
-    end
-
     ActionController::Base.instance_eval do
       def use_db_connection(connection, args)
         klass_names = args.delete(:for)
@@ -134,6 +91,38 @@ module Postamt
       after_filter do
         Postamt.overwritten_default_connections.clear
       end
+    end
+
+    ActiveRecord::LogSubscriber.prepend Postamt::LogSubscriber
+    ActiveRecord::Relation.prepend Postamt::Relation
+  end
+
+  module LogSubscriber
+    extend ActiveSupport::Concern
+
+    def sql(event)
+      @postamt_connection_name = ObjectSpace._id2ref(event.payload[:connection_id]).instance_variable_get(:@config)[:username]
+      super
+    end
+
+    def debug(msg)
+      conn = @postamt_connection_name ? color("  [#{@postamt_connection_name}]", ActiveSupport::LogSubscriber::BLUE, true) : ''
+      super(conn + msg)
+    end
+  end
+
+  module Relation
+    # Also make sure that actions that don't instantiate the model and
+    # therefore don't call #save or #destroy run on master.
+    # update_column calls update_all, delete calls delete_all, so we don't
+    # have to monkey patch them.
+
+    def delete_all(conditions = nil)
+      Postamt.on(:master) { super }
+    end
+
+    def update(updates)
+      Postamt.on(:master) { super }
     end
   end
 end

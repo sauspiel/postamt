@@ -14,12 +14,8 @@ class PostamtTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
-    # Since we disabled automatic transaction wrapping for our
-    # tests we have to clean up ourselves
-    Postamt.on(:master) do
-      Bar.delete_all
-      Foo.delete_all
-    end
+    Bar.delete_all
+    Foo.delete_all
   end
 
   test "self.default_connection" do
