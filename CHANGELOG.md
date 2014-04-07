@@ -1,3 +1,7 @@
+## 0.9.5
+
+Don't depend on atomic any more now that https://github.com/headius/thread_safe/pull/44 is out.
+
 ## 0.9.4
 
 Add Ruby requirement to the gemspec.
