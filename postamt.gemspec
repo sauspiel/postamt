@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "atomic", [">= 1.1.7", "< 2"]
   spec.add_dependency "railties", ["~> 4.1.0.rc1"]
   spec.add_dependency "activerecord", ["~> 4.1.0.rc1"]
   spec.add_development_dependency "bundler"

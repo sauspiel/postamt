@@ -1,10 +1,9 @@
-require 'atomic'
 require 'thread_safe'
 
 module Postamt
   class ConnectionHandler
     def initialize
-      @process_pid = Atomic.new(nil)
+      @process_pid = ThreadSafe::Util::AtomicReference.new(nil)
     end
 
     def connection_pools
