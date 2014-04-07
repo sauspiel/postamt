@@ -1,3 +1,7 @@
+## 0.9.4
+
+Add Ruby requirement to the gemspec.
+
 ## 0.9.3
 
 Require Ruby 2 and Rails 4.1.
