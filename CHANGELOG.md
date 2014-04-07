@@ -1,3 +1,9 @@
+## 0.9.3
+
+Require Ruby 2 and Rails 4.1.
+
+Fix duplicate log messages in Rails 4.1. 
+
 ## 0.9.2
 
 Fix ActiveRecord::Relation#update_all signature change in Rails 4.1.
