@@ -1,3 +1,7 @@
+## 0.9.6
+
+Update for Rails 4.1.0 final.
+
 ## 0.9.5
 
 Don't depend on atomic any more now that https://github.com/headius/thread_safe/pull/44 is out.
