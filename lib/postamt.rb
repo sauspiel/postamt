@@ -44,7 +44,7 @@ module Postamt
 
   # Called by Postamt::Railtie
   def self.hook!
-    if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 1
+    if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 2
       ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
     elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
       ActiveRecord::Base.connection_handler = Postamt::ConnectionHandler.new

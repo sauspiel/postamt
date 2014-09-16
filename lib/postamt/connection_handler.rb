@@ -110,7 +110,7 @@ module Postamt
       @pools[connection] ||= begin
         Postamt.configurations[connection.to_s] ||= Postamt.configurations['master']
 
-        spec = if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 1
+        spec = if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 2
           resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new Postamt.configurations
           resolver.spec(connection)
         elsif Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
