@@ -1,3 +1,7 @@
+## 0.9.7
+
+Allow 4.2 Versions for Rails dependencies.
+
 ## 0.9.6
 
 Update for Rails 4.1.0 final.

@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/postamt.png)](http://rubygems.org/gems/postamt)
 
-Postamt is a sane, solution for performing database reads against a hot standby server with Rails 4.1.
+Postamt is a sane, solution for performing database reads against a hot standby server with Rails 4.1 and 4.2.
 
 If you use Rails 3.2 or 4.0, use Postamt version 0.9.2.
 
