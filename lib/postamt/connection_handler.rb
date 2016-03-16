@@ -110,18 +110,8 @@ module Postamt
       @pools[connection] ||= begin
         Postamt.configurations[connection.to_s] ||= Postamt.configurations['master']
 
-        spec = if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 2
-          resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new Postamt.configurations
-          resolver.spec(connection)
-        elsif Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
-          resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new connection, Postamt.configurations
-          resolver.spec
-        elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
-          resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new connection, Postamt.configurations
-          resolver.spec
-        else
-          abort "Postamt doesn't support Rails version #{Rails.version}"
-        end
+        resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new(Postamt.configurations)
+        spec = resolver.spec(connection)
 
         unless ActiveRecord::Base.respond_to?(spec.adapter_method)
           raise ActiveRecord::AdapterNotFound, "database configuration specifies nonexistent #{spec.config[:adapter]} adapter"

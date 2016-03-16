@@ -44,11 +44,7 @@ module Postamt
 
   # Called by Postamt::Railtie
   def self.hook!
-    if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 2
-      ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
-    elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
-      ActiveRecord::Base.connection_handler = Postamt::ConnectionHandler.new
-    end
+    ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
 
     ActiveRecord::Base.instance_eval do
       class_attribute :default_connection
@@ -73,7 +69,7 @@ module Postamt
       def use_db_connection(connection, args)
         klass_names = args.delete(:for)
         if klass_names == :all
-          around_filter(args) do |controller|
+          around_action(args) do |controller|
             Postamt.on(connection) { yield }
           end
         else
@@ -82,13 +78,13 @@ module Postamt
             default_connections[klass_name] = connection
           end
 
-          before_filter(args) do |controller|
+          before_action(args) do |controller|
             Postamt.overwritten_default_connections.merge!(default_connections)
           end
         end
       end
 
-      after_filter do
+      after_action do
         Postamt.overwritten_default_connections.clear
       end
     end
