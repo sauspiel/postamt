@@ -1,0 +1,18 @@
+source 'https://rubygems.org'
+
+gem 'bigdecimal', '1.4.4'
+gem 'bundler', '1.17.3'
+gem 'pg', '0.21.0'
+gem 'pry-rails'
+gem 'rails', '4.2.11.3'
+
+gem 'postamt', path: '..'
+
+# Use unicorn as the app server
+# gem 'unicorn'
+
+# Deploy with Capistrano
+# gem 'capistrano', group: :development
+
+# To use debugger
+# gem 'debugger'
