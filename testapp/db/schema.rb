@@ -16,13 +16,13 @@ ActiveRecord::Schema.define(version: 20130408112535) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "bars", force: true do |t|
+  create_table "bars", force: :cascade do |t|
     t.text     "message"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  create_table "foos", force: true do |t|
+  create_table "foos", force: :cascade do |t|
     t.integer  "bar_id"
     t.datetime "created_at"
     t.datetime "updated_at"
