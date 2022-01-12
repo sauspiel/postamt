@@ -115,7 +115,7 @@ $ createuser -s slave # better to restrict slave to be read-only
 Migrate the DB in the Rails 4 app:
 
 ```
-$ cd testapp41 # Rails 4.1
+$ cd testapp
 $ RAILS_ENV=test bundle exec rake db:migrate
 $ bundle exec ruby -Itest test/integration/postamt_test.rb
 ```
