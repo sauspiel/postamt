@@ -72,7 +72,7 @@ end
 
 ```ruby
 class ArchivedItem < ActiveRecord::Base
-  # default_connection can be overwritten with 
+  # default_connection can be overwritten with
   # * Postamt.on(...) { ... },
   # * ActiveRecord::Base.transaction { ... }, and
   # * use_db_connection :other_connection, for: ['ArchivedItem'] in a controller.
@@ -131,4 +131,3 @@ itself when it detects that a task starting with 'db' is run (like
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
-
