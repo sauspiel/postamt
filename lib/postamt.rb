@@ -51,7 +51,7 @@ module Postamt
     end
 
     ActiveRecord::Base.instance_eval do
-      class_attribute :default_connection
+      class_attribute :default_connection, :transaction_connection
 
       # disable Model.establish_connection
       def establish_connection(*args)
@@ -61,7 +61,7 @@ module Postamt
 
       # a transaction runs on Postamt.transaction_connection or on the :on option
       def transaction(options = {}, &block)
-        if connection = (options.delete(:on) || Postamt.transaction_connection)
+        if connection = (options.delete(:on) || transaction_connection || Postamt.transaction_connection)
           Postamt.on(connection) { super }
         else
           super
@@ -118,11 +118,19 @@ module Postamt
     # have to monkey patch them.
 
     def delete_all(conditions = nil)
-      Postamt.on(:master) { super }
+      if connection = (transaction_connection || Postamt.transaction_connection)
+        Postamt.on(connection) { super }
+      else
+        super
+      end
     end
 
     def update(updates)
-      Postamt.on(:master) { super }
+      if connection = (transaction_connection || Postamt.transaction_connection)
+        Postamt.on(connection) { super }
+      else
+        super
+      end
     end
   end
 end
