@@ -12,7 +12,10 @@ module Postamt
         # We mustn't hook into AR when db:migrate or db:test:load_schema
         # run, but user-defined Rake tasks still need us
         task_names = []
-        tasks_to_examine = Rake.application.top_level_tasks.map{ |task_name| Rake.application[task_name] }
+        tasks_to_examine = Rake.application.top_level_tasks.map{ |task_string|
+          task_name, task_args = Rake.application.parse_task_string(task_string)
+          Rake.application[task_name]
+        }
         until tasks_to_examine.empty?
           task = tasks_to_examine.pop
           task_names << task.name

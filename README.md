@@ -71,7 +71,7 @@ end
 
 ```ruby
 class ArchivedItem < ActiveRecord::Base
-  # default_connection can be overwritten with 
+  # default_connection can be overwritten with
   # * Postamt.on(...) { ... },
   # * ActiveRecord::Base.transaction { ... }, and
   # * use_db_connection :other_connection, for: ['ArchivedItem'] in a controller.
@@ -111,12 +111,12 @@ $ createuser -s master # -s => superuser
 $ createuser -s slave # better to restrict slave to be read-only
 ```
 
-Migrate the DB in the Rails 4 app:
+Run the tests:
 
 ```
-$ cd testapp41 # Rails 4.1
-$ RAILS_ENV=test bundle exec rake db:migrate
-$ bundle exec ruby -Itest test/integration/postamt_test.rb
+$ cd testapp52
+$ bin/setup
+$ bin/rails test
 ```
 
 You can't run the tests via a simple `rake` because Postamt deactivates
@@ -130,4 +130,3 @@ itself when it detects that a task starting with 'db' is run (like
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
-
