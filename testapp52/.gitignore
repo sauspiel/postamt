@@ -4,5 +4,4 @@
 !/log/.keep
 !/tmp/.keep
 .byebug_history
-/postgres/
 /config/secrets.yml

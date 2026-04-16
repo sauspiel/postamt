@@ -3,6 +3,8 @@ development:
   database: postamt
   username: master
   encoding: utf8
+  port: 5433
+  host: localhost
   slave:
     username: slave
 
@@ -11,5 +13,7 @@ test:
   database: postamt_test
   username: master
   encoding: utf8
+  port: 5433
+  host: localhost
   slave:
     username: slave

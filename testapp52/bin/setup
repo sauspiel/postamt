@@ -3,10 +3,11 @@ require 'pathname'
 require 'fileutils'
 include FileUtils
 
-APP_ROOT = Pathname.new File.expand_path('../../', __FILE__)
-PGDATA   = APP_ROOT.join('postgres/data')
-PGLOG    = APP_ROOT.join('postgres/log')
-PGPORT   = 5433
+APP_ROOT  = Pathname.new File.expand_path('../../', __FILE__)
+REPO_ROOT = APP_ROOT.parent
+PGDATA    = REPO_ROOT.join('postgres/data')
+PGLOG     = REPO_ROOT.join('postgres/log')
+PGPORT    = 5433
 
 def system!(*args)
   system(*args) || abort("\n== Command #{args} failed ==")
