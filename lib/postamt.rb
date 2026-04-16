@@ -44,11 +44,7 @@ module Postamt
 
   # Called by Postamt::Railtie
   def self.hook!
-    if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 2
-      ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
-    elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
-      ActiveRecord::Base.connection_handler = Postamt::ConnectionHandler.new
-    end
+    ActiveRecord::Base.default_connection_handler = Postamt::ConnectionHandler.new
 
     ActiveRecord::Base.instance_eval do
       class_attribute :default_connection
@@ -67,13 +63,22 @@ module Postamt
           super
         end
       end
+
+      # Rails 5.2 changed retrieve_connection_pool to pass a spec name string
+      # instead of the class. Override here to restore class-based routing so
+      # per-model default_connection is respected.
+      def retrieve_connection
+        pool = connection_handler.retrieve_connection_pool(self)
+        raise ActiveRecord::ConnectionNotEstablished unless pool
+        pool.connection
+      end
     end
 
     ActionController::Base.instance_eval do
       def use_db_connection(connection, args)
         klass_names = args.delete(:for)
         if klass_names == :all
-          around_filter(args) do |controller|
+          around_action(args) do |controller|
             Postamt.on(connection) { yield }
           end
         else
@@ -82,13 +87,13 @@ module Postamt
             default_connections[klass_name] = connection
           end
 
-          before_filter(args) do |controller|
+          before_action(args) do |controller|
             Postamt.overwritten_default_connections.merge!(default_connections)
           end
         end
       end
 
-      after_filter do
+      after_action do
         Postamt.overwritten_default_connections.clear
       end
     end
@@ -101,7 +106,8 @@ module Postamt
     extend ActiveSupport::Concern
 
     def sql(event)
-      @postamt_connection_name = ObjectSpace._id2ref(event.payload[:connection_id]).instance_variable_get(:@config)[:username]
+      connection = event.payload[:connection] || ObjectSpace._id2ref(event.payload[:connection_id])
+      @postamt_connection_name = connection.instance_variable_get(:@config)[:username]
       super
     end
 
@@ -117,7 +123,7 @@ module Postamt
     # update_column calls update_all, delete calls delete_all, so we don't
     # have to monkey patch them.
 
-    def delete_all(conditions = nil)
+    def delete_all
       Postamt.on(:master) { super }
     end
 

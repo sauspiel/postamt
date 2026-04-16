@@ -2,9 +2,10 @@
 
 [![Gem Version](https://badge.fury.io/rb/postamt.png)](http://rubygems.org/gems/postamt)
 
-Postamt is a sane, solution for performing database reads against a hot standby server with Rails 4.1 and 4.2.
+Postamt is a sane solution for performing database reads against a hot standby server with Rails.
 
-If you use Rails 3.2 or 4.0, use Postamt version 0.9.2.
+For Rails 4.1 and above, the current Postamt version is `0.10.0`.
+If you use Rails 3.2 or 4.0, use Postamt version `0.9.2`.
 
 Choose per model and/or controller&action whether a read-only query
 should be sent to master or a hot standby.<br />
@@ -19,8 +20,6 @@ Monkey-patching is kept to an absolute minimum, the hard work happens
 through [officially-supported Rails
 APIs](https://github.com/rails/rails/commit/ba1544d71628abff2777c9c514142d7e9a159111#commitcomment-2106059).
 That's why there's so little code compared to similar gems.
-
-Postamt requires Rails 3.2+ and works with Rails 4.
 
 ## Installation
 
@@ -112,12 +111,12 @@ $ createuser -s master # -s => superuser
 $ createuser -s slave # better to restrict slave to be read-only
 ```
 
-Migrate the DB in the Rails 4 app:
+Run the tests:
 
 ```
-$ cd testapp
-$ RAILS_ENV=test bundle exec rake db:migrate
-$ bundle exec ruby -Itest test/integration/postamt_test.rb
+$ cd testapp52
+$ bin/setup
+$ bin/rails test
 ```
 
 You can't run the tests via a simple `rake` because Postamt deactivates

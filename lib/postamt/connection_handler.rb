@@ -42,6 +42,11 @@ module Postamt
       self.connection_pool_list.each(&:disconnect!)
     end
 
+    def flush_idle_connections!
+      self.ensure_ready
+      self.connection_pool_list.each(&:flush!)
+    end
+
     # Locate the connection of the nearest super class. This can be an
     # active or defined connection: if it is the latter, it will be
     # opened and set as the active connection for the class it was defined
@@ -101,6 +106,9 @@ module Postamt
       # before the App is initialized. Return nil in that case, Rails deals with that
       return nil if ActiveRecord::Base.configurations[Rails.env].nil?
 
+      # Rails 5.2+ may call with a spec name string instead of a class
+      klass = ActiveRecord::Base if klass.is_a?(String)
+
       connection = connection_for(klass)
       # Ideally we would use #fetch here, as class_to_pool[klass] may sometimes be nil.
       # However, benchmarking (https://gist.github.com/jonleighton/3552829) showed that
@@ -110,18 +118,8 @@ module Postamt
       @pools[connection] ||= begin
         Postamt.configurations[connection.to_s] ||= Postamt.configurations['master']
 
-        spec = if Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR <= 2
-          resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new Postamt.configurations
-          resolver.spec(connection)
-        elsif Rails::VERSION::MAJOR == 4 and Rails::VERSION::MINOR == 0
-          resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new connection, Postamt.configurations
-          resolver.spec
-        elsif Rails::VERSION::MAJOR == 3 and Rails::VERSION::MINOR == 2
-          resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new connection, Postamt.configurations
-          resolver.spec
-        else
-          abort "Postamt doesn't support Rails version #{Rails.version}"
-        end
+        resolver = ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new(Postamt.configurations)
+        spec = resolver.spec(connection)
 
         unless ActiveRecord::Base.respond_to?(spec.adapter_method)
           raise ActiveRecord::AdapterNotFound, "database configuration specifies nonexistent #{spec.config[:adapter]} adapter"
