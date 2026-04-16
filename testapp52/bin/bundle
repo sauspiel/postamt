@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+ENV['BUNDLE_BIN_PATH'] ||= Gem.bin_path('bundler', 'bundle')
+load ENV['BUNDLE_BIN_PATH']

@@ -1,0 +1,19 @@
+development:
+  adapter: postgresql
+  database: postamt
+  username: master
+  encoding: utf8
+  port: 5433
+  host: localhost
+  slave:
+    username: slave
+
+test:
+  adapter: postgresql
+  database: postamt_test
+  username: master
+  encoding: utf8
+  port: 5433
+  host: localhost
+  slave:
+    username: slave
